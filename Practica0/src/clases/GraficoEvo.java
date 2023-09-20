@@ -20,25 +20,35 @@ public class GraficoEvo extends JPanel implements ActionListener {
     private int anyoInicial;
     private int anyoFinal;
     int separation = 5;
+    private JLabel lblResultado;
 
     public GraficoEvo(ArrayList<DatoTabular> tenistas, ArrayList<DatoTabular> resultados, int anyoInicial, int anyoFinal) {
     	
         barras = new ArrayList<>();
         mapaTenistasBarras = new HashMap<Tenista,BarraTenista>();
         this.resultados = new ArrayList<DatoTabular>(resultados);
-//        System.out.println(resultados);
         this.anyoInicial = anyoInicial;
         this.anyoFinal = anyoFinal;
         
+        lblResultado = new JLabel("Año " + Integer.toString(anyoInicial));
+        add(lblResultado);
+
+        System.out.println("hola");
+        HashMap<Tenista,Integer> mapaVictorias = HistoriaGrandSlams.calculaClasificacion(HistoriaGrandSlams.anyoMin, anyoInicial-1);
+        System.out.println("Adios");
         for (DatoTabular dato: tenistas) {
-        	BarraTenista barraT = new BarraTenista((Tenista) dato);
+        	Tenista t = (Tenista) dato;
+        	BarraTenista barraT = new BarraTenista(t);
+        	if (mapaVictorias.containsKey(t)) {
+        		barraT.setValue(mapaVictorias.get(t));
+        	}
         	barras.add(barraT);
         	mapaTenistasBarras.put((Tenista) dato, barraT);
         }
-        int ydimension= 35*tenistas.size();
-        setPreferredSize(new Dimension(400, ydimension));
+        Collections.sort(barras);
+        setPreferredSize(new Dimension(400, 375));
         
-        timer = new Timer(1000, this); // Temporizador de 2 segundos
+        timer = new Timer(2000, this); // Temporizador de 2 segundos
         timer.start();
     }
 
@@ -46,17 +56,17 @@ public class GraficoEvo extends JPanel implements ActionListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int barHeight = 30;//getHeight() / barras.size();
+        int barHeight = 30;
         int maxWidth = getWidth() - 190; // Ancho máximo disponible
         int separation = 5; // Espacio entre las barras
 
-        for (int i = 0; i < barras.size(); i++) {
+        for (int i = 0; i < 10;i++) {
             BarraTenista bar = barras.get(i);
-            int barWidth = (int)(maxWidth*bar.getValue())/maxValue;//(int) ((maxWidth - (barras.size() - 1) * separation) * (bar.getValue() / (double) maxValue)); // Calcula la longitud relativa de la barra
-            int y = i * (barHeight + separation); // Agrega el espacio de separación
+            int barWidth = (int)(maxWidth*bar.getValue())/maxValue;
+            int y = i * (barHeight + separation) + 25; // Agrega el espacio de separación
 
             g.setColor(bar.getColor());
-            g.fillRect(90, y, barWidth, barHeight);
+            g.fillRect(100, y, barWidth, barHeight);
 
             // Agrega etiquetas de texto junto a las barras
             int labelValue = bar.getValue();
@@ -84,7 +94,6 @@ public class GraficoEvo extends JPanel implements ActionListener {
 	        	System.out.println("Comparando " + anyoInicial + " y " + r.getAnyo());
 	        	if (r.getAnyo()==anyoInicial) {
 	        		System.out.println("Dentro if, año: " + anyoInicial);
-	        		
 	        		BarraTenista b = mapaTenistasBarras.get(r.getGanador());
 	        		b.incrementValue();
 	        		if (b.getValue()>maxValue) {
@@ -96,6 +105,7 @@ public class GraficoEvo extends JPanel implements ActionListener {
 	        // Ordena las barras por valor
 	        Collections.sort(barras);
 	        anyoInicial++;
+	        lblResultado.setText("Año " + Integer.toString(anyoInicial) );
 	        repaint(); // Vuelve a dibujar el componente
     	}
     }

@@ -2,30 +2,26 @@ package clases;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.TreeMap;
 
+import javax.swing.table.DefaultTableModel;
+
 public class HistoriaGrandSlams {
-	private ArrayList<DatoTabular> resultados;
-	private ArrayList<DatoTabular> tenistas;
-	private ArrayList<DatoTabular> torneos;
-	private HashMap<String,Torneo> torneosMapaNombre;
-	private HashMap<Integer,Torneo> torneosMapaCodigo;
-	private HashMap<String,Tenista> tenistasMapaNombre;
-	private TreeMap<Tenista,Integer> mapaVictoriasTenistas;
+	static ArrayList<DatoTabular> resultados;
+	static ArrayList<DatoTabular> tenistas;
+	static ArrayList<DatoTabular> torneos;
+	static HashMap<String,Torneo> torneosMapaNombre;
+	static HashMap<Integer,Torneo> torneosMapaCodigo;
+	static HashMap<String,Tenista> tenistasMapaNombre;
+	static TreeMap<Tenista,Integer> mapaVictoriasTenistas;
 	
+	static String ficheroCSV = null;
 	
+	static int anyoMin = 10000000;
 
 
-//	public HistoriaGrandSlams() {
-//			this.resultados = new ArrayList<Resultado>();
-//			this.tenistas = new ArrayList<Tenista>();
-//			this.torneos = new ArrayList<Torneo>();
-//			this.torneosMapaNombre = new HashMap<String,Torneo>();
-//			this.torneosMapaCodigo = new HashMap<Integer,Torneo>();
-//			this.tenistasMapaNombre = new HashMap<String,Tenista>();
-//			this.mapaVictoriasTenistas = new TreeMap<Tenista,Integer>();
-//		}
 	
 	public ArrayList<DatoTabular> getResultados() {
 		return resultados;
@@ -106,6 +102,7 @@ public class HistoriaGrandSlams {
 		this.torneosMapaCodigo = new HashMap<Integer,Torneo>();
 		this.tenistasMapaNombre = new HashMap<String,Tenista>();
 		this.mapaVictoriasTenistas = new TreeMap<Tenista,Integer>();
+		ficheroCSV = ficheroCsv;
 		File f  = new File(ficheroCsv);
 		FileReader fr = null;
 		BufferedReader br = null;
@@ -167,7 +164,9 @@ public class HistoriaGrandSlams {
             	Resultado r = new Resultado(Integer.parseInt(campos[0]), torneosMapaCodigo.get(Integer.parseInt(campos[1])),
             			tenistasMapaNombre.get(campos[2]), Integer.parseInt(campos[3]), tenistasMapaNombre.get(campos[5]),  Integer.parseInt(campos[6]), campos[8]);
             	resultados.add(r);
-            	
+            	if (r.getAnyo()<anyoMin) {
+            		anyoMin = r.getAnyo();
+            	}
             	linea = br.readLine();
             }
 		}catch (Exception e) {
@@ -185,7 +184,53 @@ public class HistoriaGrandSlams {
 				mapaVictoriasTenistas.replace(t, mapaVictoriasTenistas.get(t)+1);
 			}
 		}
-	}; 
+	};
+	
+	public static HashMap<Tenista,Integer> calculaClasificacion(int anyoInicial,int anyoFinal) {
+		HashMap<Tenista,Integer> mapa = new HashMap<Tenista, Integer>();
+		while (anyoInicial<=anyoFinal) {
+			for (DatoTabular d: resultados) {
+				Resultado r = (Resultado) d;
+				if (r.getAnyo()==anyoInicial) {
+					Tenista ganador = r.getGanador();
+					if (mapa.get(ganador) == null) {
+						mapa.put(ganador, 1);
+					}else {
+						mapa.replace(ganador, mapa.get(ganador)+1);
+					}
+				}
+			}
+			anyoInicial++;
+		}
+		
+		return mapa;
+		
+	};
+	
+	public static void guardarFichero () {
+		File f = new File(ficheroCSV);
+		FileWriter fw = null;
+		PrintWriter pw = null;
+		try {
+			fw = new FileWriter(f);
+			pw = new PrintWriter(fw);
+			
+			pw.println("Anyo;Major;Champion;Seed_Champion;Ctry_Champion;Runner-up;Seed_Runner-up;Ctry-Runner;Score in the final");
+			DefaultTableModel modelo = (DefaultTableModel) VentanaGrandSlam.tablaResultados.getModel();
+			for (int i=0;i<modelo.getRowCount();i++) {
+				String paisGanador = tenistasMapaNombre.get(modelo.getValueAt(i, 2)).getNacionalidad();
+				String paisFinalista = tenistasMapaNombre.get(modelo.getValueAt(i, 4)).getNacionalidad();
+				String codigoTorneo = Integer.toString(torneosMapaNombre.get(modelo.getValueAt(i, 1)).getCodigo());
+				
+				pw.println(modelo.getValueAt(i, 0)+";"+codigoTorneo+ ";"+modelo.getValueAt(i, 2)+";"+modelo.getValueAt(i, 3)+";" 
+						+ paisGanador + ";"+ modelo.getValueAt(i, 4)+ ";" + modelo.getValueAt(i, 5)+";"+ paisFinalista +";"+modelo.getValueAt(i, 6));
+			}
+			pw.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
 	
 
 }

@@ -30,7 +30,11 @@ class BarraTenista implements Comparable<BarraTenista> {
       return value;
   }
 
-  public Color getColor() {
+  public void setValue(int value) {
+		this.value = value;
+	}
+
+public Color getColor() {
       return color;
   }
 

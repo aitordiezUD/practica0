@@ -12,9 +12,5 @@ public class VentanaGraficoBarras extends JFrame {
 		add(panel);
 		
 		this.setVisible(true);
-		
-		
-		
-		
 	}
 }

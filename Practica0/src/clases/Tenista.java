@@ -75,7 +75,7 @@ public class Tenista extends DatoTabular implements Comparable<Tenista>{
 //	@Override
 	public int compareTo(Tenista o) {
 		// TODO Auto-generated method stub
-		  return Integer.compare(this.numVictorias, o.numVictorias);
+		  return Integer.compare(o.numVictorias,this.numVictorias);
 	}
 	
 	
